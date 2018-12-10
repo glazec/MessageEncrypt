@@ -1,17 +1,5 @@
 package com.inevitable.pgpkeyboard
 
-//import com.cossacklabs.themis.ISessionCallbacks;
-//import com.cossacklabs.themis.InvalidArgumentException;
-//import com.cossacklabs.themis.KeyGenerationException;
-//import com.cossacklabs.themis.KeypairGenerator;
-//import com.cossacklabs.themis.Keypair;
-//import com.cossacklabs.themis.NullArgumentException;
-//import com.cossacklabs.themis.PublicKey;
-//import com.cossacklabs.themis.SecureCellData;
-//import com.cossacklabs.themis.SecureCellException;
-//import com.cossacklabs.themis.SecureSession;
-//import com.cossacklabs.themis.SecureSessionException;
-//import com.cossacklabs.themis.SecureCell;
 
 import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
@@ -58,9 +46,9 @@ class MainActivity : AppCompatActivity() {
 
         //list view show keystore alias
 //        val listView: ListView = findViewById(R.id.lv)
-        adapter = ListItemKeypairAdapter(this@MainActivity, mList)
+        adapter = ListItemKeypairAdapter(this@MainActivity, datas)
 //        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
-        listView.setAdapter(adapter)
+        listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
             Toast.makeText(this@MainActivity, "CLick$l", Toast.LENGTH_SHORT).show()
         }
@@ -76,8 +64,11 @@ class MainActivity : AppCompatActivity() {
 
         adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
             override fun onDeleteClick(i: Int) {
-                mList.removeAt(i);
-                adapter.notifyDataSetChanged();
+                ks.deleteEntry(datas[i])
+                for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
+                datas.removeAt(i)
+                adapter.notifyDataSetChanged()
+
             }
         })
 //        adapter.setOnItemDeleteClickListener(fun() {
