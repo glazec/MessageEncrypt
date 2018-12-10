@@ -12,9 +12,10 @@ import android.widget.TextView
 class ListItemKeypairAdapter(context: Context, list: MutableList<String>) : BaseAdapter() {
     private var mContext = context
     private var mList = list
-    override fun getView(position: Int, convertView: View, parent: ViewGroup?): View {
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         //To change body of created functions use File | Settings | File Templates.
-        var viewHolder: ViewHolder? = null;
+        lateinit var viewHolder: ViewHolder
         var view = convertView
 
         if (view == null) {
@@ -22,27 +23,27 @@ class ListItemKeypairAdapter(context: Context, list: MutableList<String>) : Base
             view = LayoutInflater.from(mContext).inflate(R.layout.list_item_keypair, null)
             viewHolder.mTextView = view.findViewById(R.id.item_tv) as TextView
             viewHolder.mButton = view.findViewById(R.id.item_btn) as Button
-            view.setTag(viewHolder)
+            view.tag = viewHolder
+
         } else {
-            viewHolder = view.getTag() as ViewHolder
+            viewHolder = view.tag as ViewHolder
         }
 
-        viewHolder.mTextView.setText(mList.get(position))
+        viewHolder.mTextView.text = mList[position]
         viewHolder.mButton.setOnClickListener {
-            mOnItemDeleteListener.onDeleteClick(position);
+            mOnItemDeleteListener.onDeleteClick(position)
         }
 
-
-        return view
+        return view!!
     }
 
-    interface onItemDeleteListener {
+    interface OnItemDeleteListener {
         fun onDeleteClick(i: Int)
     }
 
-    private lateinit var mOnItemDeleteListener: onItemDeleteListener
+    private lateinit var mOnItemDeleteListener: OnItemDeleteListener
 
-    fun setOnItemDeleteClickListener(mOnItemDeleteListener: onItemDeleteListener) {
+    fun setOnItemDeleteClickListener(mOnItemDeleteListener: OnItemDeleteListener) {
         this.mOnItemDeleteListener = mOnItemDeleteListener
     }
 

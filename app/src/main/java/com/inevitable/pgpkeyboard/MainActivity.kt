@@ -1,12 +1,5 @@
 package com.inevitable.pgpkeyboard
 
-import android.os.Bundle
-import android.security.*
-import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity;
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.Toast
 //import com.cossacklabs.themis.ISessionCallbacks;
 //import com.cossacklabs.themis.InvalidArgumentException;
 //import com.cossacklabs.themis.KeyGenerationException;
@@ -20,28 +13,30 @@ import android.widget.Toast
 //import com.cossacklabs.themis.SecureSessionException;
 //import com.cossacklabs.themis.SecureCell;
 
-import java.security.*
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
-import android.security.keystore.KeyProperties
+import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import android.widget.EditText
-import java.util.logging.Logger
-import android.R.string.cancel
-import android.content.DialogInterface
-import android.widget.ArrayAdapter
 import android.widget.ListView
-import android.view.Window.FEATURE_NO_TITLE
-import android.app.Activity
-import android.view.Window.FEATURE_NO_TITLE
+import android.widget.Toast
+import kotlinx.android.synthetic.main.activity_main.*
+import java.security.KeyPairGenerator
+import java.security.KeyStore
 
 
 class MainActivity : AppCompatActivity() {
 
     val datas:MutableList<String> = mutableListOf()
+    private var mList: MutableList<String> = mutableListOf()
+    lateinit var adapter: ListItemKeypairAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,45 +44,47 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        initList()
 
-        //get keystore
-//        val kpg = KeyPairGenerator.getInstance(
-//            KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore"
-//        )
-//
-//        kpg.initialize(
-//            KeyGenParameterSpec.Builder(
-//                "hh",
-//                KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
-//            )
-//                .setDigests(
-//                    KeyProperties.DIGEST_SHA256,
-//                    KeyProperties.DIGEST_SHA512
-//                )
-//                .build()
-//        )
-//
-//
-//        val kp = kpg.generateKeyPair()
+
         val ks = KeyStore.getInstance("AndroidKeyStore")
         ks.load(null)
 
         for(i in ks.aliases()){
             datas.add(i)
         }
-//        testOutput.setText(ks.getEntry("hh",null).toString())
 
+        val listView = findViewById<ListView>(R.id.listView)
 
         //list view show keystore alias
-        val listView = findViewById(R.id.lv) as ListView
-        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
+//        val listView: ListView = findViewById(R.id.lv)
+        adapter = ListItemKeypairAdapter(this@MainActivity, mList)
+//        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
         listView.setAdapter(adapter)
+        listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
+            Toast.makeText(this@MainActivity, "CLick$l", Toast.LENGTH_SHORT).show()
+        }
+//        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
+//            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//                Toast.makeText(MainActivity.this, "Click item" + i, Toast.LENGTH_SHORT).show();
+//            }
+//        })
 
-//        button_keypari.setOnClickListener { view ->
-//            Snackbar.make(view,KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate(), Snackbar.LENGTH_LONG)
-//                .setAction("Action", null).show()
+//        {
+//            Toast.makeText(this@MainActivity,"Click item $(i:Int)",Toast.LENGTH_SHORT).show()
 //        }
-//    }
+
+        adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
+            override fun onDeleteClick(i: Int) {
+                mList.removeAt(i);
+                adapter.notifyDataSetChanged();
+            }
+        })
+//        adapter.setOnItemDeleteClickListener(fun() {
+//            //            mList.removeAt(i)
+//            adapter.notifyDataSetChanged()
+//        })
+
         button_keypari.setOnClickListener{
 
           //input dialog
@@ -107,11 +104,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-//                button_keypari.setOnClickListener {
-//                    Toast.makeText(this,"click",Toast.LENGTH_SHORT).show();
-//        }
-//    }
-
     fun create_key(alias:String){
         val new_key = KeyPairGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore"
@@ -128,6 +120,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 .build()
         )
+
         datas.add(alias)
         new_key.generateKeyPair()
         val ks = KeyStore.getInstance("AndroidKeyStore")
@@ -138,6 +131,7 @@ class MainActivity : AppCompatActivity() {
         }
         Log.i("new key entry",ks.getEntry(alias,null).toString())
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -152,6 +146,12 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun initList() {
+        for (x in 1..20 step 1) {
+            mList.add("$x")
         }
     }
 }
