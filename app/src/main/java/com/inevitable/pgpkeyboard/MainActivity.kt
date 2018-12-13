@@ -3,7 +3,9 @@ package com.inevitable.pgpkeyboard
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.support.v7.app.AlertDialog
@@ -13,10 +15,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
+import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -111,6 +110,24 @@ class MainActivity : AppCompatActivity() {
         Log.e("test", "test".toByteArray().toString())
         var a = encryptMessage("test".toByteArray(), ks, "testkey")
         decryptMessage(a, ks, "testkey")
+
+//        var btn_openSetting = findViewById<Button>(R.id.btn_openSetting)
+//        var btn_openFloatingBall = findViewById<Button>(R.id.btn_openFloatingBall)
+
+//        btn_openSetting.setOnClickListener{
+//
+//            fun onClick(v:View ) {
+//                //打开设置  打开服务才能实现返回功能
+//                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+//            }
+//        }
+//
+//        btn_openFloatingBall.setOnClickListener{
+//            fun onClick(v:View ) {
+                ViewManager(this@MainActivity).showFloatBall()
+//                ViewManager.getInstance(this@MainActivity).showFloatBall();
+//            }
+//    }
     }
 
 

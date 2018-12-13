@@ -4,4 +4,5 @@
     <string name="testview">Beta test</string>
     <string name="delete">Delete</string>
     <string name="list_item_keypair">this is text</string>
+    <string name="start_floatingBall">open the floating ball</string>
 </resources>
