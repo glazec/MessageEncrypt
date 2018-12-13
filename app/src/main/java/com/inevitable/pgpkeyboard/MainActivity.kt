@@ -21,7 +21,7 @@ import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStore.ProtectionParameter
 import javax.crypto.Cipher
-
+import android.support.v7.widget.Toolbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,20 +53,39 @@ class MainActivity : AppCompatActivity() {
 //        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
         listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
-            var keyPairBuilder = AlertDialog.Builder(this)
-            keyPairBuilder.setTitle("Key Info")
-            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
-            keyPairBuilder.setNegativeButton(
-                "I know it"
-            ) { dialog, which -> dialog.cancel() }
-            keyPairBuilder.show()
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
-            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
+//            var keyPairBuilder = AlertDialog.Builder(this)
+            var builder=AlertDialog.Builder(this)
+            builder.setTitle("Cipher")
+            var input = EditText(this)
+            input.setRawInputType(InputType.TYPE_CLASS_TEXT)
+            builder.setView(input)
+            builder.setPositiveButton(
+                "Encrypt"
+            ) { dialog, which -> var ciphertext=encryptMessage(input.text.toString().toByteArray(),ks,datas[i])}
+            builder.setNegativeButton(
+                "Decrypt"
+            ) { dialog, which -> var plaintext=decryptMessage(input.text.toString().toByteArray(),ks,datas[i]) }
+            builder.setNeutralButton(
+                "cancle")
+            {dialog, which -> dialog.cancel()}
+
+            builder.show()
+        }
+
+        decryptMessage(encryptMessage("Test".toByteArray(),ks,"test"),ks,"test")
+//            keyPairBuilder.setTitle("Key Info")
+//            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
+//            keyPairBuilder.setNegativeButton(
+//                "I know it"
+//            ) { dialog, which -> dialog.cancel() }
+//            keyPairBuilder.show()
+//            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+//            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
+//            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
 
 
 //            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
-        }
+
 //        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
 //            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 //                Toast.makeText(MainActivity.this, "Click item" + i, Toast.LENGTH_SHORT).show();
@@ -107,9 +126,11 @@ class MainActivity : AppCompatActivity() {
             ) { dialog, which -> dialog.cancel() }
             builder.show()
         }
-        Log.e("test", "test".toByteArray().toString())
-        var a = encryptMessage("test".toByteArray(), ks, "testkey")
-        decryptMessage(a, ks, "testkey")
+//        Log.e("test", "test".toByteArray().toString())
+//        var a = encryptMessage("test".toByteArray(), ks, "testkey")
+//        decryptMessage(a, ks, "testkey")
+//        val toolBar = findViewById<Toolbar>(R.id.toolbar)
+//        setSupportActionBar(toolBar)
 
 //        var btn_openSetting = findViewById<Button>(R.id.btn_openSetting)
 //        var btn_openFloatingBall = findViewById<Button>(R.id.btn_openFloatingBall)
@@ -124,7 +145,7 @@ class MainActivity : AppCompatActivity() {
 //
 //        btn_openFloatingBall.setOnClickListener{
 //            fun onClick(v:View ) {
-                ViewManager(this@MainActivity).showFloatBall()
+//                ViewManager(this@MainActivity).showFloatBall()
 //                ViewManager.getInstance(this@MainActivity).showFloatBall();
 //            }
 //    }
@@ -173,10 +194,13 @@ class MainActivity : AppCompatActivity() {
         cipher.init(Cipher.ENCRYPT_MODE, keyPublic)
         val ciphertext = cipher.doFinal(plaintext)
         Log.e("cipher data", ciphertext.toString())
+        Toast.makeText(this@MainActivity, ciphertext.toString(), Toast.LENGTH_SHORT).show()
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.text = ciphertext.toString()
         return ciphertext
     }
 
-    fun decryptMessage(ciphertext: ByteArray, ks: KeyStore, alias: String): String {
+    fun decryptMessage(ciphertext: ByteArray, ks: KeyStore, alias: String):ByteArray {
         var keyPublic = ks.getCertificate(alias).publicKey
         var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
         val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
@@ -189,7 +213,10 @@ class MainActivity : AppCompatActivity() {
         cipher.init(Cipher.DECRYPT_MODE, keyPrivate)
         val plaintext = cipher.doFinal(ciphertext)
         Log.e("plain text", String(plaintext))
-        return String(plaintext)
+        Toast.makeText(this@MainActivity, String(plaintext), Toast.LENGTH_SHORT).show()
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.text = String(plaintext)
+        return plaintext
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -203,7 +230,14 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_permession -> {startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                return true}
+//            R.id.action_encrypt->{
+//
+//            }
+//            R.id.action_decrypt->{
+//
+//            }
             else -> super.onOptionsItemSelected(item)
         }
     }

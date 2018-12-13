@@ -19,6 +19,7 @@
                 android:background="?attr/colorPrimary"
                 app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
+
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/content_main" android:id="@+id/btn_openSetting"/>
@@ -30,16 +31,6 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             app:srcCompat="@android:drawable/ic_input_add"/>
-    <Button
-            android:text="btn_openSetting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/btn_openSetting"/>
-            <!--app:layout_anchorGravity="right|top"-->
-
-    <Button
-            android:text="btn_openFloatingBall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/btn_openFloatingBall"/>
+    <!--app:layout_anchorGravity="right|top"-->
 
 </android.support.design.widget.CoordinatorLayout>
