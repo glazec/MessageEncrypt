@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">PGPkeyboard</string>
     <string name="action_settings">Settings</string>
-    <string name="testview">TextView</string>
+    <string name="testview">Beta test</string>
     <string name="delete">Delete</string>
     <string name="list_item_keypair">this is text</string>
 </resources>

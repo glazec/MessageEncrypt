@@ -1,6 +1,8 @@
 package com.inevitable.pgpkeyboard
 
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -18,6 +20,8 @@ import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.KeyStore.ProtectionParameter
+import javax.crypto.Cipher
 
 
 class MainActivity : AppCompatActivity() {
@@ -50,7 +54,19 @@ class MainActivity : AppCompatActivity() {
 //        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
         listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
-            Toast.makeText(this@MainActivity, "CLick$l", Toast.LENGTH_SHORT).show()
+            var keyPairBuilder = AlertDialog.Builder(this)
+            keyPairBuilder.setTitle("Key Info")
+            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
+            keyPairBuilder.setNegativeButton(
+                "I know it"
+            ) { dialog, which -> dialog.cancel() }
+            keyPairBuilder.show()
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
+            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
+
+
+//            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
         }
 //        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
 //            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -92,23 +108,29 @@ class MainActivity : AppCompatActivity() {
             ) { dialog, which -> dialog.cancel() }
             builder.show()
         }
+        Log.e("test", "test".toByteArray().toString())
+        var a = encryptMessage("test".toByteArray(), ks, "testkey")
+        decryptMessage(a, ks, "testkey")
     }
 
 
     fun create_key(alias:String){
         val new_key = KeyPairGenerator.getInstance(
-            KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore"
+            "RSA", "AndroidKeyStore"
         )
 
         new_key.initialize(
             KeyGenParameterSpec.Builder(
                 alias,
-                KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             )
                 .setDigests(
                     KeyProperties.DIGEST_SHA256,
                     KeyProperties.DIGEST_SHA512
                 )
+                .setBlockModes(KeyProperties.BLOCK_MODE_CTR)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+                .setRandomizedEncryptionRequired(true)
                 .build()
         )
 
@@ -123,6 +145,35 @@ class MainActivity : AppCompatActivity() {
         Log.i("new key entry",ks.getEntry(alias,null).toString())
     }
 
+    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): ByteArray {
+        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
+        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
+        val keyPrivate = pkEntry.privateKey
+
+        Log.e("alias", alias)
+        var keyPublic = ks.getCertificate(alias).publicKey
+        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, keyPublic)
+        val ciphertext = cipher.doFinal(plaintext)
+        Log.e("cipher data", ciphertext.toString())
+        return ciphertext
+    }
+
+    fun decryptMessage(ciphertext: ByteArray, ks: KeyStore, alias: String): String {
+        var keyPublic = ks.getCertificate(alias).publicKey
+        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
+        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
+        val keyPrivate = pkEntry.privateKey
+
+
+//        var alias="testKey"
+//        var keyPrivate=ks.getKey(alias, null)
+        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.DECRYPT_MODE, keyPrivate)
+        val plaintext = cipher.doFinal(ciphertext)
+        Log.e("plain text", String(plaintext))
+        return String(plaintext)
+    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -140,9 +191,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun initList() {
-        for (x in 1..20 step 1) {
-            mList.add("$x")
+        mList = datas
+//        for (x in 1..20 step 1) {
+//            mList.add("$x")
+//    }
         }
     }
-}
+
