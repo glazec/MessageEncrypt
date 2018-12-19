@@ -15,7 +15,10 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.EditText
+import android.widget.ListView
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -108,26 +111,31 @@ class MainActivity : AppCompatActivity() {
             builder.show()
         }
         Log.e("test", "test".toByteArray().toString())
-        var a = encryptMessage("test".toByteArray(), ks, "testkey")
-        decryptMessage(a, ks, "testkey")
+//        var a = encryptMessage("test".toByteArray(), ks, "testkey")
+//        decryptMessage(a, ks, "testkey")
 
+
+// 打开浮动球
 //        var btn_openSetting = findViewById<Button>(R.id.btn_openSetting)
 //        var btn_openFloatingBall = findViewById<Button>(R.id.btn_openFloatingBall)
 
-//        btn_openSetting.setOnClickListener{
+//       btn_openSetting.setOnClickListener{
 //
-//            fun onClick(v:View ) {
-//                //打开设置  打开服务才能实现返回功能
-//                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+//          fun onClick(v:View ) {
+//               //打开设置  打开服务才能实现返回功能
+//               startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
 //            }
 //        }
-//
-//        btn_openFloatingBall.setOnClickListener{
-//            fun onClick(v:View ) {
-                ViewManager(this@MainActivity).showFloatBall()
-//                ViewManager.getInstance(this@MainActivity).showFloatBall();
-//            }
-//    }
+
+//       btn_openFloatingBall.setOnClickListener{
+////           fun onClick(v:View ) {
+////               var viewmanager = ViewManager(this@MainActivity)
+////               viewmanager.showFloatBall()
+////               viewmanager.getInstance(this@MainActivity).showFloatBall()
+////                ViewManager(this@MainActivity).showFloatBall()
+//////               ViewManager.getInstance(this@MainActivity).showFloatBall();
+////           }
+////   }
     }
 
 
@@ -194,7 +202,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.menu_main, menu)
+//        return true
+//        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -204,6 +215,17 @@ class MainActivity : AppCompatActivity() {
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
             R.id.action_settings -> true
+            R.id.action_permission -> {
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));return true
+            }
+            R.id.action_show_flow_ball -> {
+                ViewManager(this@MainActivity).getInstance(this@MainActivity).showFloatBall();
+
+//                    var viewmanager = ViewManager(this@MainActivity)
+//                    viewmanager.showFloatBall()
+//                    viewmanager.getInstance(this@MainActivity).showFloatBall()
+                return true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

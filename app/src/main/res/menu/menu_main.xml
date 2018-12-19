@@ -6,4 +6,12 @@
           android:title="@string/action_settings"
           android:orderInCategory="100"
           app:showAsAction="never"/>
+    <item android:id="@+id/action_permission"
+          android:title="@string/action_permission"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+    <item android:id="@+id/action_show_flow_ball"
+          android:title="@string/action_show_flow_ball"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
 </menu>

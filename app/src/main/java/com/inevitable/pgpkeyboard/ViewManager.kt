@@ -13,6 +13,7 @@ import org.greenrobot.eventbus.EventBus;
 
 
 class ViewManager(var context: Context) {
+
     lateinit var floatBall: FloatingView
     lateinit var windowManager: WindowManager
     var manager: ViewManager? = null
@@ -47,7 +48,7 @@ class ViewManager(var context: Context) {
         floatBall.setOnClickListener {
 //            EventBus.getDefault().post(MyAccessbilityService.BACK)
             EventBus.getDefault().post(0)
-            Toast.makeText(context, "点击了悬浮球 执行后退操作", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(context, "点击了悬浮球 执行后退操作", Toast.LENGTH_SHORT).show()
         }
 
         floatBall.setOnLongClickListener {
