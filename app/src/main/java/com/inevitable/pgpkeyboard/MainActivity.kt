@@ -4,6 +4,7 @@ package com.inevitable.pgpkeyboard
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
@@ -12,9 +13,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ListView
@@ -114,28 +113,54 @@ class MainActivity : AppCompatActivity() {
 //        var a = encryptMessage("test".toByteArray(), ks, "testkey")
 //        decryptMessage(a, ks, "testkey")
 
+        val text = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+        val intent = Intent()
+        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, "test")
+        setResult(RESULT_OK, intent)
 
-// 打开浮动球
-//        var btn_openSetting = findViewById<Button>(R.id.btn_openSetting)
-//        var btn_openFloatingBall = findViewById<Button>(R.id.btn_openFloatingBall)
 
-//       btn_openSetting.setOnClickListener{
+//        var textSelectionActionModeCallback = object:ActionMode.Callback2(){
 //
-//          fun onClick(v:View ) {
-//               //打开设置  打开服务才能实现返回功能
-//               startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+//            override fun onCreateActionMode(actionMode:ActionMode , menu:Menu ): Boolean {
+//                 var menuInflater:MenuInflater = actionMode.getMenuInflater()
+//                menuInflater.inflate(R.menu.selection_action_menu,menu);
+//                return true;//返回false则不会显示弹窗
 //            }
-//        }
+//
+//            override fun onPrepareActionMode(actionMode:ActionMode , menu:Menu ):Boolean {
+//                return false;
+//            }
+//
+//
+//            override fun onActionItemClicked(actionMode:ActionMode , menuItem:MenuItem):Boolean {
+//                //根据item的ID处理点击事件
+//                when (menuItem.getItemId()) {
+//                    R.id.Informal22 -> {
+//                        Toast.makeText(this@MainActivity, "点击的是22", Toast.LENGTH_SHORT).show();
+//                        actionMode.finish();//收起操作菜单
+////                        break;
+//                    }
+//                    R.id.Informal33 -> {
+//
+//                    Toast.makeText(this@MainActivity, "点击的是33", Toast.LENGTH_SHORT).show();
+//                        actionMode.finish();
+////                    break;
+//                }
+//                }
+//                return false;//返回true则系统的"复制"、"搜索"之类的item将无效，只有自定义item有响应
+//            }
+//
+//
+//            override public fun onDestroyActionMode(actionMode:ActionMode ) {
+//
+//            }
+//
+//            override fun onGetContentRect(mode:ActionMode , view:View , outRect:Rect) {
+//                //可选  用于改变弹出菜单的位置
+//                super.onGetContentRect(mode, view, outRect);
+//            }
+//        };
 
-//       btn_openFloatingBall.setOnClickListener{
-////           fun onClick(v:View ) {
-////               var viewmanager = ViewManager(this@MainActivity)
-////               viewmanager.showFloatBall()
-////               viewmanager.getInstance(this@MainActivity).showFloatBall()
-////                ViewManager(this@MainActivity).showFloatBall()
-//////               ViewManager.getInstance(this@MainActivity).showFloatBall();
-////           }
-////   }
     }
 
 
@@ -219,7 +244,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));return true
             }
             R.id.action_show_flow_ball -> {
-                ViewManager(this@MainActivity).getInstance(this@MainActivity).showFloatBall();
+//                ViewManager(this@MainActivity).getInstance(this@MainActivity).showFloatBall();
 
 //                    var viewmanager = ViewManager(this@MainActivity)
 //                    viewmanager.showFloatBall()
@@ -230,12 +255,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun initList() {
         mList = datas
 //        for (x in 1..20 step 1) {
 //            mList.add("$x")
 //    }
-        }
+    }
+
+
     }
 
