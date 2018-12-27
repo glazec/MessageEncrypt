@@ -3,10 +3,7 @@ package com.inevitable.pgpkeyboard
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Rect
 import android.os.Bundle
 import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
@@ -14,17 +11,20 @@ import android.security.keystore.KeyProperties
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
+import android.util.Base64
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStore.ProtectionParameter
+import java.security.PrivateKey
 import javax.crypto.Cipher
 
 
@@ -114,8 +114,7 @@ class MainActivity : AppCompatActivity() {
             builder.show()
         }
         Log.e("test", "test".toByteArray().toString())
-//        var a = encryptMessage("test".toByteArray(), ks, "testkey")
-//        decryptMessage(a, ks, "testkey")
+        decryptMessage(encryptMessage("test".toByteArray(), ks, "uu"), ks, "uu")
 
 
 
@@ -196,10 +195,9 @@ class MainActivity : AppCompatActivity() {
         Log.i("new key entry",ks.getEntry(alias,null).toString())
     }
 
-    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): ByteArray {
-        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
-        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
-        val keyPrivate = pkEntry.privateKey
+    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): String {
+//        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
+//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
 
         Log.e("alias", alias)
         var keyPublic = ks.getCertificate(alias).publicKey
@@ -207,21 +205,21 @@ class MainActivity : AppCompatActivity() {
         cipher.init(Cipher.ENCRYPT_MODE, keyPublic)
         val ciphertext = cipher.doFinal(plaintext)
         Log.e("cipher data", ciphertext.toString())
-        return ciphertext
+        return Base64.encodeToString(ciphertext, Base64.DEFAULT)
     }
 
-    fun decryptMessage(ciphertext: ByteArray, ks: KeyStore, alias: String): String {
+    fun decryptMessage(ciphertext: String, ks: KeyStore, alias: String): String {
         var keyPublic = ks.getCertificate(alias).publicKey
         var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
-        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
-        val keyPrivate = pkEntry.privateKey
-
+//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
+//        val keyPrivate = pkEntry.privateKey
+        var t = ks.getKey(alias, null) as PrivateKey?
 
 //        var alias="testKey"
 //        var keyPrivate=ks.getKey(alias, null)
         val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-        cipher.init(Cipher.DECRYPT_MODE, keyPrivate)
-        val plaintext = cipher.doFinal(ciphertext)
+        cipher.init(Cipher.DECRYPT_MODE, t)
+        val plaintext = cipher.doFinal(Base64.decode(ciphertext, Base64.DEFAULT))
         Log.e("plain text", String(plaintext))
         return String(plaintext)
     }
