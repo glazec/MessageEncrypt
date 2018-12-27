@@ -16,32 +16,29 @@ import android.support.v7.app.AppCompatActivity
 import android.text.InputType
 import android.util.Log
 import android.view.*
-import android.widget.AdapterView
-import android.widget.EditText
-import android.widget.ListView
-import android.widget.Toast
+import android.widget.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.text_selection.*
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStore.ProtectionParameter
 import javax.crypto.Cipher
+import kotlin.math.log
 
 
-class MainActivity : AppCompatActivity() {
+class TextSelection : AppCompatActivity() {
 
     val datas:MutableList<String> = mutableListOf()
     private var mList: MutableList<String> = mutableListOf()
-    lateinit var adapter: ListItemKeypairAdapter
-
+    private var keyAlias:String="ull"
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.text_selection)
         setSupportActionBar(toolbar)
         initList()
-
 
         val ks = KeyStore.getInstance("AndroidKeyStore")
         ks.load(null)
@@ -50,120 +47,51 @@ class MainActivity : AppCompatActivity() {
             datas.add(i)
         }
 
-        val listView = findViewById<ListView>(R.id.listView)
 
-        //list view show keystore alias
-//        val listView: ListView = findViewById(R.id.lv)
-        adapter = ListItemKeypairAdapter(this@MainActivity, datas)
-//        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
-        listView.adapter = adapter
-        listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
-            var keyPairBuilder = AlertDialog.Builder(this)
-            keyPairBuilder.setTitle("Key Info")
-            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
-            keyPairBuilder.setNegativeButton(
-                "I know it"
-            ) { dialog, which -> dialog.cancel() }
-            keyPairBuilder.show()
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
-            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
-
-
-//            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
-        }
-//        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
-//            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                Toast.makeText(MainActivity.this, "Click item" + i, Toast.LENGTH_SHORT).show();
-//            }
-//        })
-
-//        {
-//            Toast.makeText(this@MainActivity,"Click item $(i:Int)",Toast.LENGTH_SHORT).show()
-//        }
-
-        adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
-            override fun onDeleteClick(i: Int) {
-                ks.deleteEntry(datas[i])
-                for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
-                datas.removeAt(i)
-                adapter.notifyDataSetChanged()
-
+        var text:CharSequence? = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+        val intent = Intent()
+            keyAlias=textProcess(text,ks,mList)
+            bttn_apply.setOnClickListener(){
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.text = encryptMessage(text.toString().toByteArray(),ks,keyAlias).toString()
             }
-        })
+            intent.putExtra(Intent.EXTRA_PROCESS_TEXT, "paste your encryption data")
 
-//        adapter.setOnItemDeleteClickListener(fun() {
-//            //            mList.removeAt(i)
-//            adapter.notifyDataSetChanged()
-//        })
+        setResult(RESULT_OK, intent)
 
-        button_keypari.setOnClickListener{
-
-          //input dialog
-            var builder=AlertDialog.Builder(this)
-            builder.setTitle("Key Name")
-            var input = EditText(this)
-            input.setRawInputType(InputType.TYPE_CLASS_TEXT)
-            builder.setView(input)
-            builder.setPositiveButton(
-                "OK"
-            ) { dialog, which -> create_key(input.text.toString())}
-            builder.setNegativeButton(
-                "Cancel"
-            ) { dialog, which -> dialog.cancel() }
-            builder.show()
-        }
-        Log.e("test", "test".toByteArray().toString())
-//        var a = encryptMessage("test".toByteArray(), ks, "testkey")
-//        decryptMessage(a, ks, "testkey")
-
-
-
-//        var textSelectionActionModeCallback = object:ActionMode.Callback2(){
-//
-//            override fun onCreateActionMode(actionMode:ActionMode , menu:Menu ): Boolean {
-//                 var menuInflater:MenuInflater = actionMode.getMenuInflater()
-//                menuInflater.inflate(R.menu.selection_action_menu,menu);
-//                return true;//返回false则不会显示弹窗
-//            }
-//
-//            override fun onPrepareActionMode(actionMode:ActionMode , menu:Menu ):Boolean {
-//                return false;
-//            }
-//
-//
-//            override fun onActionItemClicked(actionMode:ActionMode , menuItem:MenuItem):Boolean {
-//                //根据item的ID处理点击事件
-//                when (menuItem.getItemId()) {
-//                    R.id.Informal22 -> {
-//                        Toast.makeText(this@MainActivity, "点击的是22", Toast.LENGTH_SHORT).show();
-//                        actionMode.finish();//收起操作菜单
-////                        break;
-//                    }
-//                    R.id.Informal33 -> {
-//
-//                    Toast.makeText(this@MainActivity, "点击的是33", Toast.LENGTH_SHORT).show();
-//                        actionMode.finish();
-////                    break;
-//                }
-//                }
-//                return false;//返回true则系统的"复制"、"搜索"之类的item将无效，只有自定义item有响应
-//            }
-//
-//
-//            override public fun onDestroyActionMode(actionMode:ActionMode ) {
-//
-//            }
-//
-//            override fun onGetContentRect(mode:ActionMode , view:View , outRect:Rect) {
-//                //可选  用于改变弹出菜单的位置
-//                super.onGetContentRect(mode, view, outRect);
-//            }
-//        };
 
     }
 
 
+    fun textProcess(text:CharSequence?, ks:KeyStore, mlist:List<String>):String{
+
+        var ChooseAKey = AlertDialog.Builder(this)
+
+        var contactName=findViewById<EditText>(R.id.ContactName)
+        var EncryptionContent = findViewById<TextView>(R.id.EncryptionContent)
+        EncryptionContent.setText(text.toString())
+        ChooseAKey.setTitle("Choose a key")
+        ChooseAKey.setNegativeButton(
+            "I know it"
+        ) { dialog, which -> dialog.cancel() }
+        ChooseAKey.setSingleChoiceItems(mList.toTypedArray(),-1) { dialogue, which ->
+            contactName.setText(mList[which])
+            Log.e("edittext text",contactName.text.toString())
+            setContact(mList[which])
+        }
+
+
+        ChooseAKey.create().show()
+
+        return keyAlias
+
+    }
+
+
+    private fun setContact(contact:String){
+        keyAlias=contact
+        Log.e("keyAlias",keyAlias)
+    }
 
     fun create_key(alias:String){
         val new_key = KeyPairGenerator.getInstance(
