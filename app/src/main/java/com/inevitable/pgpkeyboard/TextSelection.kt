@@ -16,6 +16,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.text_selection.*
 import java.security.KeyPairGenerator
@@ -27,9 +28,10 @@ import javax.crypto.Cipher
 
 class TextSelection : AppCompatActivity() {
 
-    val datas:MutableList<String> = mutableListOf()
+    lateinit var rawme: String
+    val datas: MutableList<String> = mutableListOf()
     private var mList: MutableList<String> = mutableListOf()
-    private var keyAlias:String="ull"
+    private var keyAlias: String = "ull"
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -41,24 +43,31 @@ class TextSelection : AppCompatActivity() {
         val ks = KeyStore.getInstance("AndroidKeyStore")
         ks.load(null)
 
-        for(i in ks.aliases()){
+        for (i in ks.aliases()) {
             datas.add(i)
         }
 
 
-        var text:CharSequence? = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+        var text: CharSequence? = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
         val intent = Intent()
         keyAlias = textProcess(text, ks, mList)
 
         bttn_apply2.setOnClickListener() {
+
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.text = decryptMessage(EncryptionContent.text.toString(), ks, keyAlias)
+            Toast.makeText(this@TextSelection, "The Decrypted text is in clipboard", Toast.LENGTH_SHORT).show()
         }
+
         bttn_apply.setOnClickListener() {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.text = encryptMessage(text.toString().toByteArray(),ks,keyAlias).toString()
-            }
-            intent.putExtra(Intent.EXTRA_PROCESS_TEXT, "paste your encryption data")
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.text = encryptMessage(text.toString().toByteArray(), ks, keyAlias)
+
+            EncryptionContent.setText(clipboard.text)
+            finish()
+            Toast.makeText(this@TextSelection, "The Encrypted text is in clipboard", Toast.LENGTH_SHORT).show()
+        }
+        intent.putExtra(Intent.EXTRA_PROCESS_TEXT, "paste your encryption data")
 
         setResult(RESULT_OK, intent)
 
@@ -66,20 +75,20 @@ class TextSelection : AppCompatActivity() {
     }
 
 
-    fun textProcess(text:CharSequence?, ks:KeyStore, mlist:List<String>):String{
+    fun textProcess(text: CharSequence?, ks: KeyStore, mlist: List<String>): String {
 
         var ChooseAKey = AlertDialog.Builder(this)
 
-        var contactName=findViewById<EditText>(R.id.ContactName)
+        var contactName = findViewById<EditText>(R.id.ContactName)
         var EncryptionContent = findViewById<TextView>(R.id.EncryptionContent)
         EncryptionContent.setText(text.toString())
         ChooseAKey.setTitle("Choose a key")
         ChooseAKey.setNegativeButton(
-            "I know it"
+            "Confirm"
         ) { dialog, which -> dialog.cancel() }
-        ChooseAKey.setSingleChoiceItems(mList.toTypedArray(),-1) { dialogue, which ->
+        ChooseAKey.setSingleChoiceItems(mList.toTypedArray(), -1) { dialogue, which ->
             contactName.setText(mList[which])
-            Log.e("edittext text",contactName.text.toString())
+            Log.e("edittext text", contactName.text.toString())
             setContact(mList[which])
         }
 
@@ -91,12 +100,12 @@ class TextSelection : AppCompatActivity() {
     }
 
 
-    private fun setContact(contact:String){
-        keyAlias=contact
-        Log.e("keyAlias",keyAlias)
+    private fun setContact(contact: String) {
+        keyAlias = contact
+        Log.e("keyAlias", keyAlias)
     }
 
-    fun create_key(alias:String){
+    fun create_key(alias: String) {
         val new_key = KeyPairGenerator.getInstance(
             "RSA", "AndroidKeyStore"
         )
@@ -121,10 +130,10 @@ class TextSelection : AppCompatActivity() {
         val ks = KeyStore.getInstance("AndroidKeyStore")
         ks.load(null)
 //        testOutput.setText(ks.getEntry(alias,null).toString())
-        for(i in ks.aliases()){
-            Log.i("android key store",i.toString())
+        for (i in ks.aliases()) {
+            Log.i("android key store", i.toString())
         }
-        Log.i("new key entry",ks.getEntry(alias,null).toString())
+        Log.i("new key entry", ks.getEntry(alias, null).toString())
     }
 
     fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): String {
@@ -155,6 +164,7 @@ class TextSelection : AppCompatActivity() {
         Log.e("plain text", String(plaintext))
         return String(plaintext)
     }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         val inflater = menuInflater
@@ -169,29 +179,26 @@ class TextSelection : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_settings -> {
+                true
+            }
             R.id.action_permission -> {
                 startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));return true
             }
-            R.id.action_show_flow_ball -> {
-//                ViewManager(this@MainActivity).getInstance(this@MainActivity).showFloatBall();
 
-//                    var viewmanager = ViewManager(this@MainActivity)
-//                    viewmanager.showFloatBall()
-//                    viewmanager.getInstance(this@MainActivity).showFloatBall()
-                return true
-            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
+
     private fun initList() {
         mList = datas
 //        for (x in 1..20 step 1) {
-//            mList.add("$x")
+////            mList.add("$x")
+//    }
 //    }
     }
+}
 
 
-    }
 

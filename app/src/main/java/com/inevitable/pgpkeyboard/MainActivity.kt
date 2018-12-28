@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.support.v7.app.AlertDialog
@@ -21,15 +20,22 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import java.math.BigInteger
+import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStore.ProtectionParameter
 import java.security.PrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
 
 
 class MainActivity : AppCompatActivity() {
 
+    lateinit var publicmodulus: BigInteger
+    lateinit var publicExponent: BigInteger
+    lateinit var rawme: String
     val datas:MutableList<String> = mutableListOf()
     private var mList: MutableList<String> = mutableListOf()
     lateinit var adapter: ListItemKeypairAdapter
@@ -58,17 +64,28 @@ class MainActivity : AppCompatActivity() {
 //        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
         listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
+            var rsaPub: RSAPublicKey = ks.getCertificate(datas[i]).publicKey as RSAPublicKey
+            var modulus: BigInteger = rsaPub.getModulus();
+            var publicExponent: BigInteger = rsaPub.getPublicExponent()
             var keyPairBuilder = AlertDialog.Builder(this)
             keyPairBuilder.setTitle("Key Info")
-            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
+            keyPairBuilder.setMessage(
+                "-------Public Key--------\n${Base64.encodeToString(
+                    ks.getCertificate(datas[i]).publicKey.getEncoded(),
+                    Base64.DEFAULT
+                )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
+            )
             keyPairBuilder.setNegativeButton(
                 "I know it"
             ) { dialog, which -> dialog.cancel() }
             keyPairBuilder.show()
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
-            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
-
+            clipboard.text = "-------Public Key--------\n${Base64.encodeToString(
+                ks.getCertificate(datas[i]).publicKey.getEncoded(),
+                Base64.DEFAULT
+            )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
+            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
+//            Log.e("process",ks.getEntry(datas[i], null).toString())
 
 //            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
         }
@@ -116,52 +133,15 @@ class MainActivity : AppCompatActivity() {
         Log.e("test", "test".toByteArray().toString())
         decryptMessage(encryptMessage("test".toByteArray(), ks, "uu"), ks, "uu")
 
-
-
-//        var textSelectionActionModeCallback = object:ActionMode.Callback2(){
-//
-//            override fun onCreateActionMode(actionMode:ActionMode , menu:Menu ): Boolean {
-//                 var menuInflater:MenuInflater = actionMode.getMenuInflater()
-//                menuInflater.inflate(R.menu.selection_action_menu,menu);
-//                return true;//返回false则不会显示弹窗
-//            }
-//
-//            override fun onPrepareActionMode(actionMode:ActionMode , menu:Menu ):Boolean {
-//                return false;
-//            }
-//
-//
-//            override fun onActionItemClicked(actionMode:ActionMode , menuItem:MenuItem):Boolean {
-//                //根据item的ID处理点击事件
-//                when (menuItem.getItemId()) {
-//                    R.id.Informal22 -> {
-//                        Toast.makeText(this@MainActivity, "点击的是22", Toast.LENGTH_SHORT).show();
-//                        actionMode.finish();//收起操作菜单
-////                        break;
-//                    }
-//                    R.id.Informal33 -> {
-//
-//                    Toast.makeText(this@MainActivity, "点击的是33", Toast.LENGTH_SHORT).show();
-//                        actionMode.finish();
-////                    break;
-//                }
-//                }
-//                return false;//返回true则系统的"复制"、"搜索"之类的item将无效，只有自定义item有响应
-//            }
-//
-//
-//            override public fun onDestroyActionMode(actionMode:ActionMode ) {
-//
-//            }
-//
-//            override fun onGetContentRect(mode:ActionMode , view:View , outRect:Rect) {
-//                //可选  用于改变弹出菜单的位置
-//                super.onGetContentRect(mode, view, outRect);
-//            }
-//        };
-
     }
 
+
+    fun importKey() {
+        val keySpec = RSAPublicKeySpec(publicmodulus, publicExponent)
+        val keyFactory = KeyFactory.getInstance("RSA")
+        val publicKey = keyFactory.generatePublic(keySpec)
+        Log.e("import", publicKey.toString())
+    }
 
 
     fun create_key(alias:String){
@@ -206,6 +186,7 @@ class MainActivity : AppCompatActivity() {
         val ciphertext = cipher.doFinal(plaintext)
         Log.e("cipher data", ciphertext.toString())
         return Base64.encodeToString(ciphertext, Base64.DEFAULT)
+
     }
 
     fun decryptMessage(ciphertext: String, ks: KeyStore, alias: String): String {
@@ -238,21 +219,49 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
-            R.id.action_permission -> {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));return true
-            }
-            R.id.action_show_flow_ball -> {
-//                ViewManager(this@MainActivity).getInstance(this@MainActivity).showFloatBall();
+            R.id.action_settings -> {
+                var builder = AlertDialog.Builder(this)
+                builder.setTitle("Exponent")
+                var input = EditText(this)
+                input.setRawInputType(InputType.TYPE_CLASS_TEXT)
+                builder.setView(input)
+                builder.setPositiveButton(
+                    "OK"
+                ) { dialog, which ->
+                    setExponent(input.text.toString().split(";")[1].trim().toBigInteger());
+                    setModuluss(input.text.toString().split(";")[0].trim().toBigInteger());
+                    importKey()
 
-//                    var viewmanager = ViewManager(this@MainActivity)
-//                    viewmanager.showFloatBall()
-//                    viewmanager.getInstance(this@MainActivity).showFloatBall()
-                return true
+                }
+                builder.setNegativeButton(
+                    "Cancel"
+                ) { dialog, which -> dialog.cancel() }
+                builder.show()
+
+//                var builder2=AlertDialog.Builder(this)
+//                var input2 = EditText(this)
+//                input2.setRawInputType(InputType.TYPE_CLASS_TEXT)
+//                builder2.setView(input)
+//                builder2.setTitle("modulus")
+//                builder2.setPositiveButton(
+//                    "OK"
+//                ) { dialog, which -> setModuluss(input.text.toString().toBigInteger());importKey();}
+//                builder2.setNegativeButton(
+//                    "Cancel"
+//                ) { dialog, which -> dialog.cancel() }
+//                builder2.show();
+                true
+
+
+            }
+            R.id.action_permission -> {
+                startActivity(Intent(this, TextSelection::class.java));return true
+
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 
     private fun initList() {
         mList = datas
@@ -261,6 +270,12 @@ class MainActivity : AppCompatActivity() {
 //    }
     }
 
+    private fun setExponent(expo: BigInteger) {
+        publicExponent = expo
+    }
 
+    private fun setModuluss(mod: BigInteger) {
+        publicmodulus = mod
+    }
     }
 

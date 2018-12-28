@@ -7,4 +7,6 @@
     <string name="start_floatingBall">open the floating ball</string>
     <string name="action_permission">Accessibility Permission</string>
     <string name="action_show_flow_ball">flow ball</string>
+    <string name="action_encryption">Encryption</string>
+    <string name="action_import">import key</string>
 </resources>
