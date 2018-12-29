@@ -33,7 +33,7 @@ import javax.crypto.Cipher
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var publicmodulus: BigInteger
+    lateinit var publicmoduls: BigInteger
     lateinit var publicExponent: BigInteger
     lateinit var rawme: String
     val datas:MutableList<String> = mutableListOf()
@@ -65,13 +65,13 @@ class MainActivity : AppCompatActivity() {
         listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
             var rsaPub: RSAPublicKey = ks.getCertificate(datas[i]).publicKey as RSAPublicKey
-            var modulus: BigInteger = rsaPub.getModulus();
-            var publicExponent: BigInteger = rsaPub.getPublicExponent()
+            var modulus: BigInteger = rsaPub.modulus
+            var publicExponent: BigInteger = rsaPub.publicExponent
             var keyPairBuilder = AlertDialog.Builder(this)
             keyPairBuilder.setTitle("Key Info")
             keyPairBuilder.setMessage(
                 "-------Public Key--------\n${Base64.encodeToString(
-                    ks.getCertificate(datas[i]).publicKey.getEncoded(),
+                    ks.getCertificate(datas[i]).publicKey.encoded,
                     Base64.DEFAULT
                 )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
             )
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             keyPairBuilder.show()
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.text = "-------Public Key--------\n${Base64.encodeToString(
-                ks.getCertificate(datas[i]).publicKey.getEncoded(),
+                ks.getCertificate(datas[i]).publicKey.encoded,
                 Base64.DEFAULT
             )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
             Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
@@ -137,10 +137,15 @@ class MainActivity : AppCompatActivity() {
 
 
     fun importKey() {
-        val keySpec = RSAPublicKeySpec(publicmodulus, publicExponent)
+        val keySpec = RSAPublicKeySpec(publicmoduls, publicExponent)
         val keyFactory = KeyFactory.getInstance("RSA")
         val publicKey = keyFactory.generatePublic(keySpec)
         Log.e("import", publicKey.toString())
+        //test
+        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+        val ciphertext = cipher.doFinal("tettt".toByteArray())
+        Log.e("cipher data", Base64.encodeToString(ciphertext, Base64.DEFAULT))
     }
 
 
@@ -191,7 +196,7 @@ class MainActivity : AppCompatActivity() {
 
     fun decryptMessage(ciphertext: String, ks: KeyStore, alias: String): String {
         var keyPublic = ks.getCertificate(alias).publicKey
-        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
+        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null)
 //        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
 //        val keyPrivate = pkEntry.privateKey
         var t = ks.getKey(alias, null) as PrivateKey?
@@ -228,8 +233,8 @@ class MainActivity : AppCompatActivity() {
                 builder.setPositiveButton(
                     "OK"
                 ) { dialog, which ->
-                    setExponent(input.text.toString().split(";")[1].trim().toBigInteger());
-                    setModuluss(input.text.toString().split(";")[0].trim().toBigInteger());
+                    setExponent(input.text.toString().split(";")[1].trim().toBigInteger())
+                    setModuls(input.text.toString().split(";")[0].trim().toBigInteger())
                     importKey()
 
                 }
@@ -274,8 +279,8 @@ class MainActivity : AppCompatActivity() {
         publicExponent = expo
     }
 
-    private fun setModuluss(mod: BigInteger) {
-        publicmodulus = mod
+    private fun setModuls(mod: BigInteger) {
+        publicmoduls = mod
     }
     }
 
