@@ -2,16 +2,12 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.inevitable.pgpkeyboard.MainActivity">
-    <item android:id="@+id/action_permession"
-          android:title="@string/accessibility"
+    <item android:id="@+id/action_settings"
+          android:title="@string/action_import"
           android:orderInCategory="100"
           app:showAsAction="never"/>
-    <item android:id="@+id/action_encrypt"
-          android:title="@string/encrypt"
-          android:orderInCategory="100"
-          app:showAsAction="never"/>
-    <item android:id="@+id/action_decrypt"
-          android:title="@string/decrypt"
+    <item android:id="@+id/action_permission"
+          android:title="@string/action_encryption"
           android:orderInCategory="100"
           app:showAsAction="never"/>
 </menu>

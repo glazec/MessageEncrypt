@@ -5,26 +5,37 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
+import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.EditText
+import android.widget.ListView
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import java.math.BigInteger
+import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStore.ProtectionParameter
+import java.security.PrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
-import android.support.v7.widget.Toolbar
+
 
 class MainActivity : AppCompatActivity() {
 
+    lateinit var publicmoduls: BigInteger
+    lateinit var publicExponent: BigInteger
+    lateinit var rawme: String
     val datas:MutableList<String> = mutableListOf()
     private var mList: MutableList<String> = mutableListOf()
     lateinit var adapter: ListItemKeypairAdapter
@@ -53,39 +64,31 @@ class MainActivity : AppCompatActivity() {
 //        val adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datas)
         listView.adapter = adapter
         listView.setOnItemClickListener { adapterView: AdapterView<*>, view1: View, i: Int, l: Long ->
-//            var keyPairBuilder = AlertDialog.Builder(this)
-            var builder=AlertDialog.Builder(this)
-            builder.setTitle("Cipher")
-            var input = EditText(this)
-            input.setRawInputType(InputType.TYPE_CLASS_TEXT)
-            builder.setView(input)
-            builder.setPositiveButton(
-                "Encrypt"
-            ) { dialog, which -> var ciphertext=encryptMessage(input.text.toString().toByteArray(),ks,datas[i])}
-            builder.setNegativeButton(
-                "Decrypt"
-            ) { dialog, which -> var plaintext=decryptMessage(input.text.toString().toByteArray(),ks,datas[i]) }
-            builder.setNeutralButton(
-                "cancle")
-            {dialog, which -> dialog.cancel()}
-
-            builder.show()
-        }
-
-        decryptMessage(encryptMessage("Test".toByteArray(),ks,"test"),ks,"test")
-//            keyPairBuilder.setTitle("Key Info")
-//            keyPairBuilder.setMessage(ks.getEntry(datas[i], null).toString())
-//            keyPairBuilder.setNegativeButton(
-//                "I know it"
-//            ) { dialog, which -> dialog.cancel() }
-//            keyPairBuilder.show()
-//            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-//            clipboard.text = ks.getCertificate(datas[i]).publicKey.toString()
-//            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show();
-
+            var rsaPub: RSAPublicKey = ks.getCertificate(datas[i]).publicKey as RSAPublicKey
+            var modulus: BigInteger = rsaPub.modulus
+            var publicExponent: BigInteger = rsaPub.publicExponent
+            var keyPairBuilder = AlertDialog.Builder(this)
+            keyPairBuilder.setTitle("Key Info")
+            keyPairBuilder.setMessage(
+                "-------Public Key--------\n${Base64.encodeToString(
+                    ks.getCertificate(datas[i]).publicKey.encoded,
+                    Base64.DEFAULT
+                )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
+            )
+            keyPairBuilder.setNegativeButton(
+                "I know it"
+            ) { dialog, which -> dialog.cancel() }
+            keyPairBuilder.show()
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.text = "-------Public Key--------\n${Base64.encodeToString(
+                ks.getCertificate(datas[i]).publicKey.encoded,
+                Base64.DEFAULT
+            )}\n-------Modules--------\n$modulus\n-------Exponents--------\n$publicExponent"
+            Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
+//            Log.e("process",ks.getEntry(datas[i], null).toString())
 
 //            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
-
+        }
 //        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
 //            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 //                Toast.makeText(MainActivity.this, "Click item" + i, Toast.LENGTH_SHORT).show();
@@ -105,6 +108,7 @@ class MainActivity : AppCompatActivity() {
 
             }
         })
+
 //        adapter.setOnItemDeleteClickListener(fun() {
 //            //            mList.removeAt(i)
 //            adapter.notifyDataSetChanged()
@@ -126,29 +130,22 @@ class MainActivity : AppCompatActivity() {
             ) { dialog, which -> dialog.cancel() }
             builder.show()
         }
-//        Log.e("test", "test".toByteArray().toString())
-//        var a = encryptMessage("test".toByteArray(), ks, "testkey")
-//        decryptMessage(a, ks, "testkey")
-//        val toolBar = findViewById<Toolbar>(R.id.toolbar)
-//        setSupportActionBar(toolBar)
+        Log.e("test", "test".toByteArray().toString())
+        decryptMessage(encryptMessage("test".toByteArray(), ks, "uu"), ks, "uu")
 
-//        var btn_openSetting = findViewById<Button>(R.id.btn_openSetting)
-//        var btn_openFloatingBall = findViewById<Button>(R.id.btn_openFloatingBall)
+    }
 
-//        btn_openSetting.setOnClickListener{
-//
-//            fun onClick(v:View ) {
-//                //打开设置  打开服务才能实现返回功能
-//                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
-//            }
-//        }
-//
-//        btn_openFloatingBall.setOnClickListener{
-//            fun onClick(v:View ) {
-//                ViewManager(this@MainActivity).showFloatBall()
-//                ViewManager.getInstance(this@MainActivity).showFloatBall();
-//            }
-//    }
+
+    fun importKey() {
+        val keySpec = RSAPublicKeySpec(publicmoduls, publicExponent)
+        val keyFactory = KeyFactory.getInstance("RSA")
+        val publicKey = keyFactory.generatePublic(keySpec)
+        Log.e("import", publicKey.toString())
+        //test
+        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey)
+        val ciphertext = cipher.doFinal("tettt".toByteArray())
+        Log.e("cipher data", Base64.encodeToString(ciphertext, Base64.DEFAULT))
     }
 
 
@@ -183,10 +180,9 @@ class MainActivity : AppCompatActivity() {
         Log.i("new key entry",ks.getEntry(alias,null).toString())
     }
 
-    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): ByteArray {
-        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
-        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
-        val keyPrivate = pkEntry.privateKey
+    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): String {
+//        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
+//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
 
         Log.e("alias", alias)
         var keyPublic = ks.getCertificate(alias).publicKey
@@ -194,34 +190,32 @@ class MainActivity : AppCompatActivity() {
         cipher.init(Cipher.ENCRYPT_MODE, keyPublic)
         val ciphertext = cipher.doFinal(plaintext)
         Log.e("cipher data", ciphertext.toString())
-        Toast.makeText(this@MainActivity, ciphertext.toString(), Toast.LENGTH_SHORT).show()
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.text = ciphertext.toString()
-        return ciphertext
+        return Base64.encodeToString(ciphertext, Base64.DEFAULT)
+
     }
 
-    fun decryptMessage(ciphertext: ByteArray, ks: KeyStore, alias: String):ByteArray {
+    fun decryptMessage(ciphertext: String, ks: KeyStore, alias: String): String {
         var keyPublic = ks.getCertificate(alias).publicKey
-        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
-        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
-        val keyPrivate = pkEntry.privateKey
-
+        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null)
+//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
+//        val keyPrivate = pkEntry.privateKey
+        var t = ks.getKey(alias, null) as PrivateKey?
 
 //        var alias="testKey"
 //        var keyPrivate=ks.getKey(alias, null)
         val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-        cipher.init(Cipher.DECRYPT_MODE, keyPrivate)
-        val plaintext = cipher.doFinal(ciphertext)
+        cipher.init(Cipher.DECRYPT_MODE, t)
+        val plaintext = cipher.doFinal(Base64.decode(ciphertext, Base64.DEFAULT))
         Log.e("plain text", String(plaintext))
-        Toast.makeText(this@MainActivity, String(plaintext), Toast.LENGTH_SHORT).show()
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.text = String(plaintext)
-        return plaintext
+        return String(plaintext)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.menu_main, menu)
+//        return true
+//        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -230,14 +224,45 @@ class MainActivity : AppCompatActivity() {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_permession -> {startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                return true}
-//            R.id.action_encrypt->{
-//
-//            }
-//            R.id.action_decrypt->{
-//
-//            }
+            R.id.action_settings -> {
+                var builder = AlertDialog.Builder(this)
+                builder.setTitle("Exponent")
+                var input = EditText(this)
+                input.setRawInputType(InputType.TYPE_CLASS_TEXT)
+                builder.setView(input)
+                builder.setPositiveButton(
+                    "OK"
+                ) { dialog, which ->
+                    setExponent(input.text.toString().split(";")[1].trim().toBigInteger())
+                    setModuls(input.text.toString().split(";")[0].trim().toBigInteger())
+                    importKey()
+
+                }
+                builder.setNegativeButton(
+                    "Cancel"
+                ) { dialog, which -> dialog.cancel() }
+                builder.show()
+
+//                var builder2=AlertDialog.Builder(this)
+//                var input2 = EditText(this)
+//                input2.setRawInputType(InputType.TYPE_CLASS_TEXT)
+//                builder2.setView(input)
+//                builder2.setTitle("modulus")
+//                builder2.setPositiveButton(
+//                    "OK"
+//                ) { dialog, which -> setModuluss(input.text.toString().toBigInteger());importKey();}
+//                builder2.setNegativeButton(
+//                    "Cancel"
+//                ) { dialog, which -> dialog.cancel() }
+//                builder2.show();
+                true
+
+
+            }
+            R.id.action_permission -> {
+                startActivity(Intent(this, TextSelection::class.java));return true
+
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -248,6 +273,14 @@ class MainActivity : AppCompatActivity() {
 //        for (x in 1..20 step 1) {
 //            mList.add("$x")
 //    }
-        }
+    }
+
+    private fun setExponent(expo: BigInteger) {
+        publicExponent = expo
+    }
+
+    private fun setModuls(mod: BigInteger) {
+        publicmoduls = mod
+    }
     }
 
