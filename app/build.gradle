@@ -34,4 +34,5 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:28.0.0'
     implementation 'org.greenrobot:eventbus:3.1.1'
     implementation 'com.google.maps.android:android-maps-utils:0.3+'
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 }
