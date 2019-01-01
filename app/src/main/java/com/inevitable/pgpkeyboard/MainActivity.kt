@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity() {
 //        }
 
         adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
+            //delete key
             override fun onDeleteClick(i: Int) {
                 try {
                     ks.deleteEntry(datas[i])
@@ -142,10 +143,10 @@ class MainActivity : AppCompatActivity() {
                     for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
                     datas.removeAt(i)
                     mList.removeAt(i)
-//                initList()
                     adapter.notifyDataSetChanged()
                 } catch (e: java.lang.Exception) {
-
+                    mList.removeAt(0)
+                    adapter.notifyDataSetChanged()
                 }
 
             }
