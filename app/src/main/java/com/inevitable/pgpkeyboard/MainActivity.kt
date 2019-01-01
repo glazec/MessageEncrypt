@@ -136,13 +136,18 @@ class MainActivity : AppCompatActivity() {
 
         adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
             override fun onDeleteClick(i: Int) {
-                ks.deleteEntry(datas[i])
-                deleteKey(datas[i])
-                for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
-                datas.removeAt(i)
-                mList.removeAt(i)
+                try {
+                    ks.deleteEntry(datas[i])
+                    deleteKey(datas[i])
+                    for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
+                    datas.removeAt(i)
+                    mList.removeAt(i)
 //                initList()
-                adapter.notifyDataSetChanged()
+                    adapter.notifyDataSetChanged()
+                } catch (e: java.lang.Exception) {
+
+                }
+
             }
         })
 
@@ -201,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                     KeyProperties.DIGEST_SHA256,
                     KeyProperties.DIGEST_SHA512
                 )
-                .setBlockModes(KeyProperties.BLOCK_MODE_CTR)
+                .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                 .setRandomizedEncryptionRequired(true)
                 .build()
@@ -295,9 +300,10 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> {
                 //import key
                 var builder = AlertDialog.Builder(this)
-                builder.setTitle("Exponent")
+                builder.setTitle("Public Key")
                 var input = EditText(this)
                 input.setRawInputType(InputType.TYPE_CLASS_TEXT)
+                input.hint = "Modulus;Exponent;Alias"
                 builder.setView(input)
                 builder.setPositiveButton(
                     "OK"

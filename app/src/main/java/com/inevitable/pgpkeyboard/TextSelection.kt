@@ -142,6 +142,20 @@ class TextSelection : AppCompatActivity() {
     }
 
     fun generatePublicKeyImported(modulus: BigInteger, exponent: BigInteger): PublicKey {
+//        KeyGenParameterSpec.Builder(
+//            alias,
+//            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+//        )
+//            .setDigests(
+//                KeyProperties.DIGEST_SHA256,
+//                KeyProperties.DIGEST_SHA512
+//            )
+//            .setBlockModes(KeyProperties.BLOCK_MODE_CTR)
+//            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
+//            .setRandomizedEncryptionRequired(true)
+//            .build()
+
+
         val keySpec = RSAPublicKeySpec(modulus, exponent)
         val keyFactory = KeyFactory.getInstance("RSA")
         val publicKey = keyFactory.generatePublic(keySpec)
