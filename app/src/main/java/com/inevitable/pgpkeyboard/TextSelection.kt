@@ -142,19 +142,6 @@ class TextSelection : AppCompatActivity() {
     }
 
     fun generatePublicKeyImported(modulus: BigInteger, exponent: BigInteger): PublicKey {
-//        KeyGenParameterSpec.Builder(
-//            alias,
-//            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-//        )
-//            .setDigests(
-//                KeyProperties.DIGEST_SHA256,
-//                KeyProperties.DIGEST_SHA512
-//            )
-//            .setBlockModes(KeyProperties.BLOCK_MODE_CTR)
-//            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-//            .setRandomizedEncryptionRequired(true)
-//            .build()
-
 
         val keySpec = RSAPublicKeySpec(modulus, exponent)
         val keyFactory = KeyFactory.getInstance("RSA")
@@ -232,10 +219,7 @@ class TextSelection : AppCompatActivity() {
         }
         cursor.close()
         db1.close()
-//        mList = datas
-//        for (x in 1..20 step 1) {
-//            mList.add("$x")
-//    }
+
     }
 }
 

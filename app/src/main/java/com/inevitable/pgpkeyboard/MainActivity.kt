@@ -23,8 +23,10 @@ import android.widget.ListView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.math.BigInteger
-import java.security.*
-import java.security.KeyStore.ProtectionParameter
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
+import java.security.KeyStore
+import java.security.PublicKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
@@ -33,8 +35,6 @@ import javax.crypto.Cipher
 //mlist for the key in the database
 class MainActivity : AppCompatActivity() {
 
-    lateinit var publicmoduls: BigInteger
-    lateinit var publicExponent: BigInteger
     val datas:MutableList<String> = mutableListOf()
     private var mList: MutableList<String> = mutableListOf()
     lateinit var adapter: ListItemKeypairAdapter
@@ -83,12 +83,37 @@ class MainActivity : AppCompatActivity() {
                     info
                 )
                 keyPairBuilder.setNegativeButton(
+                    "Delete"
+                ) { dialog, which ->
+                    run {
+                        try {
+                            ks.deleteEntry(datas[i])
+                            deleteKey(datas[i])
+                            for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
+                            datas.removeAt(i)
+                            mList.removeAt(i)
+                            adapter.notifyDataSetChanged()
+                        } catch (e: java.lang.Exception) {
+                            mList.removeAt(0)
+                            adapter.notifyDataSetChanged()
+                            deleteDatabase("EM.db")
+                            deleteAllinKeyStore(ks)
+                        }
+                        dialog.cancel()
+                    }
+                }
+                keyPairBuilder.setPositiveButton(
                     "I know it"
-                ) { dialog, which -> dialog.cancel() }
+                ) { dialog, which ->
+                    run {
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.text = info
+                        Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
+                        dialog.cancel()
+                    }
+                }
                 keyPairBuilder.show()
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.text = info
-                Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
+
             } catch (e: Exception) {
                 var dbhelper1: SQLiteOpenHelper = DatabaseHelper(this@MainActivity)
                 var db1: SQLiteDatabase? = dbhelper1.writableDatabase
@@ -113,49 +138,43 @@ class MainActivity : AppCompatActivity() {
                     info
                 )
                 keyPairBuilder.setNegativeButton(
+                    "Delete"
+                ) { dialog, which ->
+                    run {
+                        try {
+                            ks.deleteEntry(datas[i])
+                            deleteKey(datas[i])
+                            for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
+                            datas.removeAt(i)
+                            mList.removeAt(i)
+                            adapter.notifyDataSetChanged()
+                        } catch (e: java.lang.Exception) {
+                            mList.removeAt(0)
+                            adapter.notifyDataSetChanged()
+                            deleteDatabase("EM.db")
+                            deleteAllinKeyStore(ks)
+
+                        }
+                        dialog.cancel()
+                    }
+                }
+                keyPairBuilder.setPositiveButton(
                     "I know it"
-                ) { dialog, which -> dialog.cancel() }
+                ) { dialog, which ->
+                    run {
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.text = info
+                        Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
+                        dialog.cancel()
+                    }
+                }
                 keyPairBuilder.show()
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.text = info
-                Toast.makeText(this@MainActivity, "Copy the entry to the clipboard", Toast.LENGTH_SHORT).show()
             }
 //            Log.e("process",ks.getEntry(datas[i], null).toString())
 
 //            Toast.makeText(this@MainActivity, ks.getEntry(datas[i],null).toString(), Toast.LENGTH_LONG).show()
         }
-//        listView.setOnItemClickListener(AdapterView.OnItemClickListener() {
-//            override fun onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                Toast.makeText(MainActivity.this, "Click item" + i, Toast.LENGTH_SHORT).show();
-//            }
-//        })
 
-//        {
-//            Toast.makeText(this@MainActivity,"Click item $(i:Int)",Toast.LENGTH_SHORT).show()
-//        }
-
-        adapter.setOnItemDeleteClickListener(object : ListItemKeypairAdapter.OnItemDeleteListener {
-            //delete key
-            override fun onDeleteClick(i: Int) {
-                try {
-                    ks.deleteEntry(datas[i])
-                    deleteKey(datas[i])
-                    for (i in ks.aliases()) Log.e("keystore alisa", i.toString())
-                    datas.removeAt(i)
-                    mList.removeAt(i)
-                    adapter.notifyDataSetChanged()
-                } catch (e: java.lang.Exception) {
-                    mList.removeAt(0)
-                    adapter.notifyDataSetChanged()
-                }
-
-            }
-        })
-
-//        adapter.setOnItemDeleteClickListener(fun() {
-//            //            mList.removeAt(i)
-//            adapter.notifyDataSetChanged()
-//        })
 
         button_keypari.setOnClickListener{
 
@@ -254,35 +273,9 @@ class MainActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged()
     }
 
-    fun encryptMessage(plaintext: ByteArray, ks: KeyStore, alias: String): String {
-//        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null);
-//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
 
-        Log.e("alias", alias)
-        var keyPublic = ks.getCertificate(alias).publicKey
-        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-        cipher.init(Cipher.ENCRYPT_MODE, keyPublic)
-        val ciphertext = cipher.doFinal(plaintext)
-        Log.e("cipher data", ciphertext.toString())
-        return Base64.encodeToString(ciphertext, Base64.DEFAULT)
 
-    }
 
-    fun decryptMessage(ciphertext: String, ks: KeyStore, alias: String): String {
-        var keyPublic = ks.getCertificate(alias).publicKey
-        var protParam: ProtectionParameter = KeyStore.PasswordProtection(null)
-//        val pkEntry = ks.getEntry(alias, protParam) as KeyStore.PrivateKeyEntry
-//        val keyPrivate = pkEntry.privateKey
-        var t = ks.getKey(alias, null) as PrivateKey?
-
-//        var alias="testKey"
-//        var keyPrivate=ks.getKey(alias, null)
-        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-        cipher.init(Cipher.DECRYPT_MODE, t)
-        val plaintext = cipher.doFinal(Base64.decode(ciphertext, Base64.DEFAULT))
-        Log.e("plain text", String(plaintext))
-        return String(plaintext)
-    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -324,18 +317,6 @@ class MainActivity : AppCompatActivity() {
                 ) { dialog, which -> dialog.cancel() }
                 builder.show()
 
-//                var builder2=AlertDialog.Builder(this)
-//                var input2 = EditText(this)
-//                input2.setRawInputType(InputType.TYPE_CLASS_TEXT)
-//                builder2.setView(input)
-//                builder2.setTitle("modulus")
-//                builder2.setPositiveButton(
-//                    "OK"
-//                ) { dialog, which -> setModuluss(input.text.toString().toBigInteger());importKey();}
-//                builder2.setNegativeButton(
-//                    "Cancel"
-//                ) { dialog, which -> dialog.cancel() }
-//                builder2.show();
                 true
 
 
@@ -344,6 +325,13 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, TextSelection::class.java));return true
 
             }
+//            R.id.action_deleteAll->{
+//                deleteDatabase("EM.db")
+//                deleteAllinKeyStore(ks)
+//                mList= mutableListOf()
+//                adapter.notifyDataSetChanged()
+//                return true
+//            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -363,19 +351,8 @@ class MainActivity : AppCompatActivity() {
         }
         cursor.close()
         db1.close()
-//        mList = datas
-//        for (x in 1..20 step 1) {
-//            mList.add("$x")
-//    }
     }
 
-    private fun setExponent(expo: BigInteger) {
-        publicExponent = expo
-    }
-
-    private fun setModuls(mod: BigInteger) {
-        publicmoduls = mod
-    }
 
     private fun deleteAllinKeyStore(ks: KeyStore) {
         for (i in ks.aliases()) {

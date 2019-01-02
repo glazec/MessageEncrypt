@@ -10,4 +10,8 @@
           android:title="@string/action_encryption"
           android:orderInCategory="100"
           app:showAsAction="never"/>
+    <!--<item android:id="@+id/action_deleteAll"-->
+    <!--android:title="@string/delete_all_the_entry"-->
+    <!--android:orderInCategory="100"-->
+    <!--app:showAsAction="never"/>-->
 </menu>
