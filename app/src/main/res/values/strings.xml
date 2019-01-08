@@ -7,7 +7,8 @@
     <string name="start_floatingBall">open the floating ball</string>
     <string name="action_permission">Accessibility Permission</string>
     <string name="action_show_flow_ball">flow ball</string>
-    <string name="action_encryption">Encryption</string>
-    <string name="action_import">import key</string>
+    <string name="action_encryption_text">Encrypt Text</string>
+    <string name="action_import">Import Key</string>
     <string name="delete_all_the_entry">Delete all the entry</string>
+    <string name="encrypt_file">Encrypt File</string>
 </resources>

@@ -1,14 +1,17 @@
 package com.inevitable.pgpkeyboard
 
 
+import android.Manifest
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
@@ -21,6 +24,7 @@ import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
+import com.leon.lfilepickerlibrary.LFilePicker
 import kotlinx.android.synthetic.main.activity_main.*
 import java.math.BigInteger
 import java.security.KeyFactory
@@ -302,9 +306,6 @@ class MainActivity : AppCompatActivity() {
                 builder.setPositiveButton(
                     "OK"
                 ) { dialog, which ->
-                    //                    setExponent(input.text.toString().split(";")[1].trim().toBigInteger())
-//                    setModuls(input.text.toString().split(";")[0].trim().toBigInteger())
-                    //modulus;exponent;alias
                     recordImportKey(
                         input.text.toString().split(";")[0].trim(),
                         input.text.toString().split(";")[1].trim(),
@@ -316,14 +317,19 @@ class MainActivity : AppCompatActivity() {
                     "Cancel"
                 ) { dialog, which -> dialog.cancel() }
                 builder.show()
-
                 true
-
-
             }
             R.id.action_permission -> {
                 startActivity(Intent(this, TextSelection::class.java));return true
-
+            }
+            R.id.action_file->{
+                while(ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED){
+                    requestPermissions(Array<String>(1){ Manifest.permission.WRITE_EXTERNAL_STORAGE},1024)}
+                LFilePicker()
+            .withActivity(this@MainActivity)
+            .withRequestCode(1000)
+            .start()
+                true
             }
 //            R.id.action_deleteAll->{
 //                deleteDatabase("EM.db")

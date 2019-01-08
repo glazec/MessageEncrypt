@@ -7,7 +7,11 @@
           android:orderInCategory="100"
           app:showAsAction="never"/>
     <item android:id="@+id/action_permission"
-          android:title="@string/action_encryption"
+          android:title="@string/action_encryption_text"
+          android:orderInCategory="100"
+          app:showAsAction="never"/>
+    <item android:id="@+id/action_file"
+          android:title="@string/encrypt_file"
           android:orderInCategory="100"
           app:showAsAction="never"/>
     <!--<item android:id="@+id/action_deleteAll"-->
