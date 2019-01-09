@@ -25,6 +25,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import com.leon.lfilepickerlibrary.LFilePicker
+import com.leon.lfilepickerlibrary.utils.Constant
 import kotlinx.android.synthetic.main.activity_main.*
 import java.math.BigInteger
 import java.security.KeyFactory
@@ -34,7 +35,6 @@ import java.security.PublicKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
-
 // datas for the key in keystore
 //mlist for the key in the database
 class MainActivity : AppCompatActivity() {
@@ -342,8 +342,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 1000) {
+                var list: List<String> = data!!.getStringArrayListExtra("paths");
+                Toast.makeText(getApplicationContext(), "选中了" + list.size + "个文件", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
-    private fun initList() {
+
+
+        private fun initList() {
         var dbhelper1: SQLiteOpenHelper = DatabaseHelper(this@MainActivity)
         var db1: SQLiteDatabase? = dbhelper1.writableDatabase
         val cursor = db1!!.query("user", arrayOf("id", "name"), null, null, null, null, null)

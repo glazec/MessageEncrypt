@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Message Encrypt</string>
+    <string name="app_name">Message Encrypt Test</string>
     <string name="action_settings">Settings</string>
     <string name="testview">Beta test</string>
     <string name="delete">Delete</string>
